@@ -5,6 +5,8 @@ import datetime
 # from datetime import datetime
 from pyexpat.errors import messages
 import requests
+from wtforms import IntegerField
+from wtforms.validators import DataRequired
 
 from data import db_session
 from flask import Flask, request, make_response, render_template, redirect, Response
@@ -13,9 +15,12 @@ from data.wood import Wood
 from data.width import Width
 from data.lists import Lists
 from data.pazzle import Pazzle
+from data.orders import Orders
+from data.clients import Clients
 
 from forms.lists import Lists_Form
 from forms.pazzles import Pazzle_Form, lists
+from forms.orders import OrdersForm, create_dynamic_form
 
 
 web = Flask(__name__)
@@ -41,6 +46,130 @@ async def pricelist():
     pazzle = db_sess.query(Pazzle).all()
     db_sess.close()
     return render_template("price_list.html", pazzles=pazzle)
+
+
+@web.route("/orders", methods=['GET', 'POST'])
+async def orders():
+    db_sess = db_session.create_session()
+    order = db_sess.query(Orders).all()
+    result = []
+    for ord in order:
+        goods = ord.goods
+        goods = goods.split(', ')
+        good = []
+        for g in goods:
+            name, num = g.split(' - ')
+            good.append((name, num))
+        result.append((ord, good))
+    db_sess.close()
+    return render_template("orders.html", orders=result)
+
+
+@web.route('/order', methods=['GET', 'POST'])
+def add_order():
+    db_sess = db_session.create_session()
+    names = db_sess.query(Clients).all()
+    pazzles = db_sess.query(Pazzle).all()
+    form = create_dynamic_form(pazzles)
+    form.client.choices = [g.name for g in names]
+    if form.validate_on_submit():
+        goods = []
+        for key, field in form._fields.items():
+            if key not in['status', 'client', 'date', 'submit', 'csrf_token']:
+                if field.data != 0:
+                    lab = str(field.label)
+                    k = 0
+                    label = ''
+                    for i in lab:
+                        if i == '<' or i == '>':
+                            k += 1
+                        if k == 2:
+                            label += i
+                    goods.append(str(label)[1:] + ' - ' + str(field.data))
+        goods = ', '.join(goods)
+        order = Orders(
+            status=form.status.data,
+            client=form.client.data,
+            date=form.date.data,
+            goods=goods
+        )
+        db_sess.add(order)
+        db_sess.commit()
+        db_sess.close()
+        return redirect('/orders')
+    return render_template('order.html', title='Добавление заказа', form=form)
+
+
+@web.route('/order/<int:id>', methods=['GET', 'POST'])
+async def edit_order(id):
+    db_sess = db_session.create_session()
+    names = db_sess.query(Clients).all()
+    pazzles = db_sess.query(Pazzle).all()
+    form = create_dynamic_form(pazzles)
+    form.client.choices = [g.name for g in names]
+    if request.method == "GET":
+        order = db_sess.query(Orders).filter(Orders.id == id).first()
+        if order:
+            goods = order.goods
+            goods = goods.split(', ')
+            good = []
+            for g in goods:
+                name, num = g.split(' - ')
+                good.append((name, num))
+            form.status.data = order.status
+            form.client.data = order.client
+            form.date.data = order.date
+            count = 0
+            for key, field in form._fields.items():
+                if key not in ['status', 'client', 'date', 'submit', 'csrf_token']:
+                    if field.data != 0:
+                        field.data = int(good[count][1])
+                        count += 1
+            db_sess.close()
+        else:
+            return not_found_error(f"Заказ с ID {id} не найдена")
+    if form.validate_on_submit():
+        order = db_sess.query(Orders).filter(Orders.id == id).first()
+        if order:
+            order.status = form.status.data
+            order.client = form.client.data
+            order.data = form.date.data
+            goods = []
+            for key, field in form._fields.items():
+                if key not in ['status', 'client', 'date', 'submit', 'csrf_token']:
+                    if field.data != 0:
+                        lab = str(field.label)
+                        k = 0
+                        label = ''
+                        for i in lab:
+                            if i == '<' or i == '>':
+                                k += 1
+                            if k == 2:
+                                label += i
+                        goods.append(str(label)[1:] + ' - ' + str(field.data))
+            goods = ', '.join(goods)
+            order.goods = goods
+            db_sess.commit()
+            db_sess.close()
+            return redirect("/orders")
+        else:
+            return not_found_error(f"Заказ с ID {id} не найдена")
+    return render_template('order.html',
+                            title='Редактирование заказа',
+                            form=form)
+
+
+@web.route('/order_delete/<int:id>', methods=['GET', 'POST'])
+async def order_delete(id):
+    db_sess = db_session.create_session()
+    order = db_sess.query(Orders).filter(Orders.id == id).first()
+    if order:
+        db_sess.delete(order)
+        db_sess.commit()
+        db_sess.close()
+        return redirect('/orders')
+    else:
+        return not_found_error(f"Заказ с ID {id} не найдена")
 
 
 @web.route('/list', methods=['GET', 'POST'])
