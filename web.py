@@ -35,6 +35,14 @@ async def index():
     return render_template("index.html", woods=wood, width=width, lists=lists, pazzles=pazzle)
 
 
+@web.route("/pricelist", methods=['GET', 'POST'])
+async def pricelist():
+    db_sess = db_session.create_session()
+    pazzle = db_sess.query(Pazzle).all()
+    db_sess.close()
+    return render_template("price_list.html", pazzles=pazzle)
+
+
 @web.route('/list', methods=['GET', 'POST'])
 def add_list():
     form = Lists_Form()

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<table class="table">
+  <thead class="thead-dark">
+    <tr style="font-size: 40px">
+      <th scope="col">№</th>
+      <th scope="col">Название пазла</th>
+      <th scope="col">Фанерный лист</th>
+      <th scope="col">Цена, руб</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for pazzle in pazzles %}
+    <tr style="font-size: 30px">
+      <th scope="row">{{ pazzle.id }}</th>
+      <td>{{ pazzle.name }}</td>
+      <td>{{ pazzle.lists }}</td>
+      <td>{{ pazzle.price }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
