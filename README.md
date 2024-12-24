@@ -1,6 +1,6 @@
 # "Агаш Пазл"
 
-![app-image](/assets/pazzle.jpg)
+![app-image](/assets/pazzle_small.png)
 
 Добро пожаловать в приложение "Агаш Пазл"
 
