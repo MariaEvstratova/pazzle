@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 style="font-size: 50px">{{ title }}</h1>
+<br>
+<form action="" method="post">
+    {{ form.hidden_tag() }}
+    <p>
+        {{ form.status.label }}<br>
+        {{ form.status(class="form-control") }}<br>
+        {% for error in form.status.errors %}
+    <p class="alert alert-danger" role="alert">
+        {{ error }}
+    </p>
+        {% endfor %}
+    </p>
+    <p>
+        {{ form.client.label }}<br>
+        {{ form.client(class="form-control") }}<br>
+        {% for error in form.client.errors %}
+    <p class="alert alert-danger" role="alert">
+        {{ error }}
+    </p>
+        {% endfor %}
+    </p>
+    <p>
+        {{ form.date.label }}<br>
+        {{ form.date(class="form-control") }}<br>
+        {% for error in form.date.errors %}
+    <p class="alert alert-danger" role="alert">
+        {{ error }}
+    </p>
+        {% endfor %}
+    </p>
+    <h1 style="font-size: 30px">Выберите нужные товары и нужное количество</h1>
+    {% for key, field in form._fields.items() %}
+    {% if key not in ['status', 'client', 'date', 'submit', 'csrf_token'] %}
+    <p>
+        {{ field.label }}<br>
+        {{ field(class="form-control") }}<br>
+        {% for error in field.errors %}
+    <p class="alert alert-danger" role="alert">
+        {{ error }}
+    </p>
+        {% endfor %}
+    </p>
+    {% endif %}
+    {% endfor %}
+    <p>{{ form.submit(class="btn btn-primary") }}</p>
+    {{ message }}
+</form>
+{% endblock %}
