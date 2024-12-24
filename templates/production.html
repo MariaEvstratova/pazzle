@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 style="font-size: 50px">Задания на производстве</h1>
+<br><br>
+{% for prod, goods in orders %}
+<div class="col-md6 border rounded">
+    <div style="font-size: 30px">
+        {{ prod.id }}. Статус: {{ prod.status }}
+    </div>
+    <div style="font-size: 20px">
+        Дата регистрации задания: {{ prod.date_started }}
+    </div>
+    <div style="font-size: 20px">
+        Дата выполнения: {{ prod.date_ended }}
+    </div>
+    <div style="font-size: 20px">
+        <table class="table">
+            <thead class="thead-dark">
+            <tr style="font-size: 25px">
+                <th scope="col">Товар, пазлы</th>
+                <th scope="col">Количество, шт</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for name, num in goods %}
+            <tr style="font-size: 20px">
+                <td>{{ name }}</td>
+                <td>{{ num }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div>
+        <a href="/task/{{ prod.id }}" class="btn btn-warning">
+            Изменить
+        </a>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

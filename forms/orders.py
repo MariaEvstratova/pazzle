@@ -5,8 +5,7 @@ import datetime
 
 
 class OrdersForm(FlaskForm):
-    status = SelectField('Вид древесины', choices=["Черновик", "Согласовано с клиентом",
-                                                   "На производстве", "Готов к отгрузке", "Отгружен клиенту"])
+    status = SelectField('Статус заказа', choices=["Черновик", "Согласовано с клиентом"])
     client = SelectField("Клиент")
     date = DateTimeField('Дата выполнения', default=datetime.datetime.now)
     submit = SubmitField('Применить')

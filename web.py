@@ -17,10 +17,12 @@ from data.lists import Lists
 from data.pazzle import Pazzle
 from data.orders import Orders
 from data.clients import Clients
+from data.production import Production
 
 from forms.lists import Lists_Form
-from forms.pazzles import Pazzle_Form, lists
-from forms.orders import OrdersForm, create_dynamic_form
+from forms.pazzles import Pazzle_Form
+from forms.orders import create_dynamic_form
+from forms.production import ProductionForm
 
 
 web = Flask(__name__)
@@ -70,6 +72,71 @@ async def orders():
     return render_template("orders.html", orders=result)
 
 
+@web.route("/tasks", methods=['GET', 'POST'])
+async def tasks():
+    db_sess = db_session.create_session()
+    production = db_sess.query(Production).all()
+    result = []
+    for i in range(len(production)):
+        prod = production[i]
+        order = db_sess.query(Orders).filter(Orders.id == prod.id_order).first()
+        goods = order.goods
+        goods = goods.split(', ')
+        good = []
+        for g in goods:
+            name, num = g.split(' - ')
+            good.append((name, num))
+        result.append((prod, good))
+    db_sess.close()
+    return render_template("production.html", orders=result)
+
+
+@web.route('/task/<int:id>', methods=['GET', 'POST'])
+async def edit_task(id):
+    db_sess = db_session.create_session()
+    form = ProductionForm()
+    if request.method == "GET":
+        prod = db_sess.query(Production).filter(Production.id == id).first()
+        if prod:
+            form.status.data = prod.status
+            form.date_started.data = prod.date_started
+            form.date_ended.data = prod.date_ended
+            db_sess.close()
+        else:
+            return not_found_error(f"Заказ с ID {id} не найдена")
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        prod = db_sess.query(Production).filter(Production.id == id).first()
+        if prod:
+            prod.status = form.status.data
+            prod.date_started = form.date_started.data
+            prod.date_ended = form.date_ended.data
+            db_sess.commit()
+            if form.status.data == 'Принято в производство':
+                db_sess = db_session.create_session()
+                prod = db_sess.query(Production).filter(Production.id == id).first()
+                order = db_sess.query(Orders).filter(Orders.id == prod.id_order).first()
+                order.status = "На производстве"
+                db_sess.commit()
+                db_sess.close()
+                return redirect('/orders')
+            if form.status.data == 'Выполнен':
+                db_sess = db_session.create_session()
+                prod = db_sess.query(Production).filter(Production.id == id).first()
+                order = db_sess.query(Orders).filter(Orders.id == prod.id_order).first()
+                order.status = "Готов к отгрузке"
+                db_sess.commit()
+                db_sess.close()
+                return redirect('/orders')
+            db_sess.close()
+            return redirect("/tasks")
+        else:
+            return not_found_error(f"Заказ с ID {id} не найдена")
+    return render_template('product.html',
+                            title='Редактирование задания на производство',
+                            form=form)
+
+
 @web.route('/order', methods=['GET', 'POST'])
 def add_order():
     db_sess = db_session.create_session()
@@ -79,6 +146,7 @@ def add_order():
     form.client.choices = [g.name for g in names]
     if form.validate_on_submit():
         goods = []
+        count = 0
         for key, field in form._fields.items():
             if key not in['status', 'client', 'date', 'submit', 'csrf_token']:
                 if field.data != 0:
@@ -90,7 +158,11 @@ def add_order():
                             k += 1
                         if k == 2:
                             label += i
+                    count += field.data
                     goods.append(str(label)[1:] + ' - ' + str(field.data))
+        if count == 0:
+            return render_template('order.html', title='Добавление заказа',
+                                   form=form, message="Нужно выбрать как минимум 1 товар")
         goods = ', '.join(goods)
         order = Orders(
             status=form.status.data,
@@ -101,6 +173,16 @@ def add_order():
         db_sess.add(order)
         db_sess.commit()
         db_sess.close()
+        if form.status.data == 'Согласовано с клиентом':
+            order = db_sess.query(Orders).filter(Orders.client == form.client.data | Orders.goods == goods).first()
+            prod = Production(
+                status="",
+                id_order=order.id
+            )
+            db_sess.add(prod)
+            db_sess.commit()
+            db_sess.close()
+            return redirect('/orders')
         return redirect('/orders')
     return render_template('order.html', title='Добавление заказа', form=form)
 
@@ -156,6 +238,16 @@ async def edit_order(id):
             order.goods = goods
             db_sess.commit()
             db_sess.close()
+            if form.status.data == 'Согласовано с клиентом':
+                order = db_sess.query(Production).filter(Orders.client == form.client.data and Orders.goods == goods).first()
+                prod = Production(
+                    status="",
+                    id_order=order.id
+                )
+                db_sess.add(prod)
+                db_sess.commit()
+                db_sess.close()
+                return redirect('/orders')
             return redirect("/orders")
         else:
             return not_found_error(f"Заказ с ID {id} не найдена")
