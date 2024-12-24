@@ -1,12 +1,5 @@
 import json
-import threading
-import random
-import datetime
-# from datetime import datetime
-from pyexpat.errors import messages
-import requests
-from wtforms import IntegerField
-from wtforms.validators import DataRequired
+import os
 
 from data import db_session
 from flask import Flask, request, make_response, render_template, redirect, Response
@@ -445,6 +438,6 @@ def not_found_error(message):
 
 
 if __name__ == '__main__':
-    web.run(port=8080, host='127.0.0.1', debug=True)
-    # port = int(os.environ.get("PORT", 5000))
-    # app.run(host='0.0.0.0', port=port)
+    # web.run(port=8080, host='127.0.0.1', debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    web.run(host='0.0.0.0', port=port)
