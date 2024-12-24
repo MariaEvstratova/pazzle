@@ -28,6 +28,11 @@ web.config['SECRET_KEY'] = 'secret_key'
 db_session.global_init("db/data_base.db")
 
 
+@web.route("/health")
+def health():
+    return '{"Up!"}'
+
+
 @web.route("/", methods=['GET', 'POST'])
 async def index():
     db_sess = db_session.create_session()
