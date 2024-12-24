@@ -55,6 +55,31 @@ async def pricelist():
     return render_template("price_list.html", pazzles=pazzle)
 
 
+@web.route("/statistica", methods=['GET', 'POST'])
+async def statistica():
+    db_sess = db_session.create_session()
+    orders = db_sess.query(Orders).filter(Orders.status == 'Готов к отгрузке').all()
+    result = dict()
+    for order in orders:
+        goods = order.goods
+        goods = goods.split(', ')
+        good = []
+        for g in goods:
+            name, num = g.split(' - ')
+            good.append((name, num))
+        for name_pazzle, num_pazzle in good:
+            if name_pazzle not in result:
+                pazzle = db_sess.query(Pazzle).filter(Pazzle.name == name_pazzle).first()
+                result[name_pazzle] = {'price': str(int(pazzle.price) * int(num_pazzle)), 'num': str(num_pazzle), 'lists': pazzle.lists}
+            else:
+                result[name_pazzle]['num'] += num_pazzle
+        res = []
+        for key in result:
+            res.append((key, result[key]))
+    db_sess.close()
+    return render_template("statistics.html", stat=res)
+
+
 @web.route("/orders", methods=['GET', 'POST'])
 async def orders():
     db_sess = db_session.create_session()

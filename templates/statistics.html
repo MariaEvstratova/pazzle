@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<table class="table">
+  <thead class="thead-dark">
+    <tr style="font-size: 40px">
+      <th scope="col">Название пазла</th>
+      <th scope="col">Фанерный лист</th>
+      <th scope="col">Цена, руб</th>
+      <th scope="col">Количество, проданного товара</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for key, value in stat %}
+    <tr style="font-size: 30px">
+      <td>{{ key }}</td>
+      <td>{{ value['lists'] }}</td>
+      <td>{{ value['price'] }}</td>
+      <td>{{ value['num'] }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
