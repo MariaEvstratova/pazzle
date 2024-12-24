@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 style="font-size: 50px">"Агаш Пазл"</h1>
+<br><br>
+<h1 id="wood">Виды древесины:</h1>
+{% for wood in woods %}
+<div class="col-md6 border rounded">
+    <div style="font-size: 30px">
+        {{ wood.type }}
+    </div>
+    <div style="font-size: 20px">
+        {{ wood.description }}
+    </div>
+</div>
+{% endfor %}
+<br>
+<h1 id="width">Размеры толщины:</h1>
+{% for mm in width %}
+<div class="col-md6 border rounded">
+    <div style="font-size: 30px">
+        {{ mm.type }}
+    </div>
+    <div style="font-size: 20px">
+        {{ mm.description }}
+    </div>
+</div>
+{% endfor %}
+<br>
+<br><br>
+<h1 id="lists">Список листов:</h1>
+<br>
+<a href="/list" class="btn btn-secondary">Добавить лист</a>
+<br><br>
+{% for list in lists %}
+<div class="col-md6 border rounded">
+    <div style="font-size: 30px">
+        {{ list.name }}
+    </div>
+    <div style="font-size: 20px">
+        Тип древесины: {{ list.wood }}
+    </div>
+    <div style="font-size: 20px">
+        Размер ширины: {{ list.width }}
+    </div>
+    <div>
+        <a href="/list/{{ list.id }}" class="btn btn-warning">
+            Изменить
+        </a>
+        <a href="/list_delete/{{ list.id }}" class="btn btn-danger">
+            Удалить
+        </a>
+    </div>
+</div>
+{% endfor %}
+<br>
+<br><br>
+<h1 id="pazzle">Список пазлов:</h1>
+<br>
+<a href="/pazzle" class="btn btn-secondary">Добавить пазл</a>
+<br><br>
+{% for pazzle in pazzles %}
+<div class="col-md6 border rounded">
+    <div style="font-size: 30px">
+        Название пазла: {{ pazzle.name }}
+    </div>
+    <div style="font-size: 20px">
+        Фанерный лист: {{ pazzle.lists }}
+    </div>
+    <div style="font-size: 20px">
+        Количество деталей, шт: {{ pazzle.num_details }}
+    </div>
+    <div style="font-size: 20px">
+        Цена, рубли: {{ pazzle.price }}
+    </div>
+    <div><img src="{{ url_for('static', filename=pazzle.picture) }}" style="max-width: 300px"
+              alt="здесь должна была быть картинка, но не нашлась"></div>
+    <div>
+        <a href="/pazzle/{{ pazzle.id }}" class="btn btn-warning">
+            Изменить
+        </a>
+        <a href="/pazzle_delete/{{ pazzle.id }}" class="btn btn-danger">
+            Удалить
+        </a>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
