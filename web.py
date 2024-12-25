@@ -190,9 +190,7 @@ def add_order():
         )
         db_sess.add(order)
         db_sess.commit()
-        db_sess.close()
         if form.status.data == 'Согласовано с клиентом':
-            order = db_sess.query(Orders).filter(Orders.client == form.client.data | Orders.goods == goods).first()
             prod = Production(
                 status="",
                 id_order=order.id
@@ -201,6 +199,7 @@ def add_order():
             db_sess.commit()
             db_sess.close()
             return redirect('/orders')
+        db_sess.close()
         return redirect('/orders')
     return render_template('order.html', title='Добавление заказа', form=form)
 
@@ -255,9 +254,7 @@ async def edit_order(id):
             goods = ', '.join(goods)
             order.goods = goods
             db_sess.commit()
-            db_sess.close()
             if form.status.data == 'Согласовано с клиентом':
-                order = db_sess.query(Production).filter(Orders.client == form.client.data and Orders.goods == goods).first()
                 prod = Production(
                     status="",
                     id_order=order.id
@@ -268,6 +265,7 @@ async def edit_order(id):
                 return redirect('/orders')
             return redirect("/orders")
         else:
+            db_sess.close()
             return not_found_error(f"Заказ с ID {id} не найдена")
     return render_template('order.html',
                             title='Редактирование заказа',
